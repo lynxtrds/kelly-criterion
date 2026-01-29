@@ -3,896 +3,717 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora Kelly Criterion - Gestión de Riesgo para Trading</title>
-    <meta name="description" content="Calculadora Kelly Criterion gratuita para optimizar tu gestión de riesgo en trading. Calcula el tamaño óptimo de posición basado en tu win rate y risk/reward.">
+    <title>Kelly Criterion Calculator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: #FAF9F7;
+            --card: #FFFFFF;
+            --border: #E5E5E3;
+            --text: #1A1A1A;
+            --text-secondary: #666666;
+            --muted: #999999;
+            --accent: #D97706;
+            --accent-bg: #FEF3C7;
+            --green: #059669;
+            --green-bg: #D1FAE5;
+            --red: #DC2626;
+            --red-bg: #FEE2E2;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100vh; overflow: hidden; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .calculator-wrapper {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
-        .calculator-grid {
+        .app {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0;
+            grid-template-columns: 300px 1fr;
+            height: 100vh;
         }
 
-        .inputs-section {
-            padding: 40px;
-            background: #f8f9fa;
-            border-right: 1px solid #e9ecef;
+        /* SIDEBAR */
+        .sidebar {
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
-        .results-section {
-            padding: 40px;
-            background: white;
+        .logo {
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .section-title {
-            font-size: 1.5rem;
+        .logo-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
             font-weight: 700;
-            margin-bottom: 30px;
-            color: #2d3748;
         }
 
         .input-group {
-            margin-bottom: 30px;
-        }
-
-        .input-label {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            font-weight: 600;
-            color: #4a5568;
+            flex-direction: column;
+            gap: 6px;
         }
 
-        .input-value {
-            font-size: 1.2rem;
-            color: #667eea;
-            font-weight: 700;
+        .label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
-        input[type="range"] {
+        .input-field {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text);
+            font-size: 14px;
             width: 100%;
-            height: 8px;
-            border-radius: 5px;
-            background: #e2e8f0;
+            font-family: inherit;
+        }
+
+        .input-field:focus {
             outline: none;
-            -webkit-appearance: none;
+            border-color: var(--text);
         }
 
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #667eea;
-            cursor: pointer;
-            transition: all 0.2s;
+        .hint {
+            font-size: 10px;
+            color: var(--muted);
+            line-height: 1.4;
         }
 
-        input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-            background: #5568d3;
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #667eea;
-            cursor: pointer;
+        .btn {
+            background: var(--text);
+            color: var(--card);
             border: none;
-            transition: all 0.2s;
-        }
-
-        input[type="number"] {
-            width: 100%;
+            border-radius: 8px;
             padding: 12px;
-            font-size: 1.1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            transition: all 0.2s;
-        }
-
-        input[type="number"]:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .range-labels {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 5px;
-            font-size: 0.85rem;
-            color: #a0aec0;
-        }
-
-        .kelly-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
-
-        .kelly-card.recommended {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            box-shadow: 0 10px 30px rgba(17, 153, 142, 0.3);
-        }
-
-        .kelly-card.conservative {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            box-shadow: 0 10px 30px rgba(79, 172, 254, 0.3);
-        }
-
-        .kelly-card-title {
-            font-size: 0.9rem;
-            opacity: 0.9;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .kelly-card-value {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .kelly-card-amount {
-            font-size: 1.3rem;
-            opacity: 0.95;
-        }
-
-        .kelly-card-badge {
-            display: inline-block;
-            background: rgba(255,255,255,0.2);
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            margin-top: 10px;
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .alert-info {
-            background: #e6f7ff;
-            color: #0c5460;
-            border-left: 4px solid #17a2b8;
-        }
-
-        .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-            border-left: 4px solid #ffc107;
-        }
-
-        .alert-danger {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .stat-box {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: #6c757d;
-            margin-bottom: 5px;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #2d3748;
-        }
-
-        .examples-section {
-            margin-top: 40px;
-            padding: 30px;
-            background: #f8f9fa;
-            border-radius: 15px;
-        }
-
-        .examples-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: #2d3748;
-        }
-
-        .example-btn {
-            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
             width: 100%;
-            padding: 15px;
-            margin-bottom: 10px;
-            background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: left;
-            font-size: 1rem;
+            margin-top: auto;
+            font-family: inherit;
         }
 
-        .example-btn:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        .btn:hover { opacity: 0.85; }
+
+        /* MAIN */
+        .main {
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
-        .example-btn strong {
-            color: #2d3748;
-            display: block;
-            margin-bottom: 5px;
+        .section-title {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
         }
 
-        .example-btn span {
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-
-        footer {
+        /* RESULT PRINCIPAL */
+        .main-result {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
             text-align: center;
-            margin-top: 40px;
-            color: white;
-            opacity: 0.8;
-            font-size: 0.9rem;
         }
 
-        footer a {
-            color: white;
-            text-decoration: none;
+        .main-result-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .main-result-value {
+            font-size: 48px;
             font-weight: 600;
+            color: var(--accent);
+            line-height: 1;
         }
 
-        .simulator-section {
-            margin-top: 40px;
-            padding: 40px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        .main-result-value.danger { color: var(--red); }
+
+        .main-result-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px;
         }
 
-        .simulator-header {
+        /* INFO BOX */
+        .info-box {
+            background: var(--accent-bg);
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-size: 12px;
+            color: var(--accent);
+            line-height: 1.5;
+        }
+
+        .info-box.danger {
+            background: var(--red-bg);
+            color: var(--red);
+        }
+
+        .info-box.success {
+            background: var(--green-bg);
+            color: var(--green);
+        }
+
+        /* OPCIONES KELLY */
+        .kelly-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .kelly-option {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .kelly-option:hover {
+            border-color: var(--text-secondary);
+        }
+
+        .kelly-option.selected {
+            border-color: var(--text);
+            box-shadow: 0 0 0 1px var(--text);
+        }
+
+        .kelly-option-name {
+            font-size: 10px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kelly-option-value {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 8px 0;
+        }
+
+        .kelly-option-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .kelly-option-risk {
+            display: inline-block;
+            font-size: 9px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        .risk-low { background: var(--green-bg); color: var(--green); }
+        .risk-medium { background: var(--accent-bg); color: var(--accent); }
+        .risk-high { background: var(--red-bg); color: var(--red); }
+
+        /* SIMULACIÓN */
+        .sim-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .sim-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 16px;
         }
 
-        .simulator-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #2d3748;
+        .sim-title {
+            font-size: 13px;
+            font-weight: 500;
         }
 
-        .simulate-btn {
-            padding: 15px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
+        .sim-subtitle {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .sim-legend {
+            display: flex;
+            gap: 12px;
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .legend-line {
+            width: 16px;
+            height: 2px;
+            border-radius: 1px;
+        }
+
+        .legend-line.dashed {
+            background: repeating-linear-gradient(90deg, var(--muted), var(--muted) 3px, transparent 3px, transparent 6px);
+        }
+
+        /* RESULTADOS GRID */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .result-card {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 9px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .result-value {
+            font-size: 16px;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            margin-top: 4px;
         }
 
-        .simulate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
-        }
-
-        .simulate-btn:active {
-            transform: translateY(0);
-        }
+        .result-value.positive { color: var(--green); }
+        .result-value.negative { color: var(--red); }
 
         .chart-container {
+            height: 220px;
             position: relative;
-            height: 400px;
-            margin-bottom: 30px;
         }
 
-        .simulation-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .simulation-table thead {
-            background: #f8f9fa;
-        }
-
-        .simulation-table th {
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-            color: #4a5568;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        .simulation-table td {
-            padding: 15px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .simulation-table tbody tr:hover {
-            background: #f8f9fa;
-        }
-
-        .kelly-fraction-cell {
-            font-weight: 600;
-            color: #2d3748;
-        }
-
-        .positive-return {
-            color: #38a169;
-            font-weight: 600;
-        }
-
-        .negative-return {
-            color: #e53e3e;
-            font-weight: 600;
-        }
-
-        .sim-controls {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
-
-        .sim-input-group {
-            flex: 1;
-        }
-
-        .sim-input-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #4a5568;
-            font-size: 0.9rem;
-        }
-
-        .sim-input-group input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e2e8f0;
+        /* DISCLAIMER */
+        .disclaimer {
+            font-size: 10px;
+            color: var(--muted);
+            text-align: center;
+            padding: 12px;
+            background: var(--bg);
             border-radius: 8px;
-            font-size: 1rem;
+            line-height: 1.5;
         }
 
-        @media (max-width: 768px) {
-            .calculator-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .inputs-section {
-                border-right: none;
-                border-bottom: 1px solid #e9ecef;
-            }
-
-            header h1 {
-                font-size: 2rem;
-            }
-
-            .kelly-card-value {
-                font-size: 2.5rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .chart-container {
-                height: 300px;
-            }
-
-            .simulator-header {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .simulate-btn {
-                width: 100%;
-            }
-
-            .sim-controls {
-                flex-direction: column;
-            }
-
-            .simulation-table {
-                font-size: 0.85rem;
-            }
-
-            .simulation-table th,
-            .simulation-table td {
-                padding: 10px 8px;
-            }
-        }
-
-        .icon {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
+        @media (max-width: 900px) {
+            .app { grid-template-columns: 1fr; }
+            .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+            .kelly-options { grid-template-columns: 1fr; }
+            .results-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>⚡ Calculadora Kelly Criterion</h1>
-            <p>Optimiza tu gestión de riesgo en trading con matemáticas</p>
-        </header>
-
-        <div class="calculator-wrapper">
-            <div class="calculator-grid">
-                <!-- INPUTS SECTION -->
-                <div class="inputs-section">
-                    <h2 class="section-title">📊 Parámetros de tu Sistema</h2>
-
-                    <div class="input-group">
-                        <div class="input-label">
-                            <span>Win Rate (%)</span>
-                            <span class="input-value" id="winRateValue">55%</span>
-                        </div>
-                        <input type="range" id="winRate" min="40" max="80" value="55" step="1">
-                        <div class="range-labels">
-                            <span>40%</span>
-                            <span>80%</span>
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <div class="input-label">
-                            <span>Risk / Reward Ratio</span>
-                            <span class="input-value" id="rrValue">1.5</span>
-                        </div>
-                        <input type="range" id="riskReward" min="0.5" max="3" value="1.5" step="0.1">
-                        <div class="range-labels">
-                            <span>0.5</span>
-                            <span>3.0</span>
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <div class="input-label">
-                            <span>Bankroll Total ($)</span>
-                        </div>
-                        <input type="number" id="bankroll" value="10000" min="100" step="100">
-                    </div>
-
-                    <!-- EJEMPLOS -->
-                    <div class="examples-section">
-                        <h3 class="examples-title">⚡ Cargar Ejemplo</h3>
-                        <button class="example-btn" onclick="loadExample(55, 1.5, 10000)">
-                            <strong>Trading Conservador</strong>
-                            <span>55% WR • R:R 1.5 • $10k</span>
-                        </button>
-                        <button class="example-btn" onclick="loadExample(60, 2, 10000)">
-                            <strong>Trading Agresivo</strong>
-                            <span>60% WR • R:R 2.0 • $10k</span>
-                        </button>
-                        <button class="example-btn" onclick="loadExample(52, 1.2, 5000)">
-                            <strong>Scalping</strong>
-                            <span>52% WR • R:R 1.2 • $5k</span>
-                        </button>
-                        <button class="example-btn" onclick="loadExample(67, 2.5, 5000)">
-                            <strong>Apuesta Deportiva</strong>
-                            <span>67% WR • R:R 2.5 • $5k</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- RESULTS SECTION -->
-                <div class="results-section">
-                    <h2 class="section-title">🎯 Resultados Kelly</h2>
-
-                    <div id="alertContainer"></div>
-
-                    <div class="kelly-card" id="fullKellyCard">
-                        <div class="kelly-card-title">Full Kelly (Óptimo Matemático)</div>
-                        <div class="kelly-card-value" id="fullKellyPercent">5.0%</div>
-                        <div class="kelly-card-amount" id="fullKellyAmount">$500</div>
-                        <span class="kelly-card-badge">Máximo crecimiento • Alta volatilidad</span>
-                    </div>
-
-                    <div class="kelly-card recommended" id="halfKellyCard">
-                        <div class="kelly-card-title">✨ Half Kelly (Recomendado)</div>
-                        <div class="kelly-card-value" id="halfKellyPercent">2.5%</div>
-                        <div class="kelly-card-amount" id="halfKellyAmount">$250</div>
-                        <span class="kelly-card-badge">⭐ Mejor balance riesgo/retorno</span>
-                    </div>
-
-                    <div class="kelly-card conservative" id="quarterKellyCard">
-                        <div class="kelly-card-title">Quarter Kelly (Conservador)</div>
-                        <div class="kelly-card-value" id="quarterKellyPercent">1.25%</div>
-                        <div class="kelly-card-amount" id="quarterKellyAmount">$125</div>
-                        <span class="kelly-card-badge">Volatilidad mínima</span>
-                    </div>
-
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <div class="stat-label">Edge / Ventaja</div>
-                            <div class="stat-value" id="edgeValue">10%</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Ganancia Esperada</div>
-                            <div class="stat-value" id="expectedGain">$12.50</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Drawdown Half Kelly</div>
-                            <div class="stat-value" id="drawdown">-11.8%</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Riesgo de Ruina</div>
-                            <div class="stat-value" id="ruinRisk">11%</div>
-                        </div>
-                    </div>
-                </div>
+    <div class="app">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">K</div>
+                Kelly Criterion
             </div>
+
+            <div class="input-group">
+                <span class="label">Win Rate %</span>
+                <input type="number" class="input-field" id="winRate" value="55" min="1" max="99">
+                <span class="hint">% de trades ganadores histórico</span>
+            </div>
+
+            <div class="input-group">
+                <span class="label">Risk/Reward Ratio</span>
+                <input type="number" class="input-field" id="riskReward" value="1.5" min="0.1" max="10" step="0.1">
+                <span class="hint">Ganancia media / Pérdida media</span>
+            </div>
+
+            <div class="input-group">
+                <span class="label">Capital Inicial USD</span>
+                <input type="number" class="input-field" id="capital" value="10000" min="100">
+            </div>
+
+            <div class="input-group">
+                <span class="label">Trades a simular</span>
+                <input type="number" class="input-field" id="numTrades" value="30" min="10" max="100">
+                <span class="hint">Recomendado: 20-50 trades</span>
+            </div>
+
+            <button class="btn" onclick="calculate()">Calcular</button>
         </div>
 
-        <!-- CAPITAL GROWTH SIMULATOR -->
-        <div class="simulator-section">
-            <div class="simulator-header">
-                <h2 class="simulator-title">📈 Simulador de Crecimiento de Capital</h2>
-                <button class="simulate-btn" onclick="runSimulation()">▶️ Simular 100 Trades</button>
+        <!-- MAIN -->
+        <div class="main">
+            <!-- Resultado principal -->
+            <div class="main-result">
+                <div class="main-result-label">Arriesgar por trade (Half Kelly recomendado)</div>
+                <div class="main-result-value" id="kellyValue">12.50%</div>
+                <div class="main-result-sub">de tu capital = <strong id="kellyAmount">$1,250</strong> por operación</div>
             </div>
 
-            <div class="sim-controls">
-                <div class="sim-input-group">
-                    <label>Número de Trades</label>
-                    <input type="number" id="numTrades" value="100" min="10" max="500" step="10">
+            <!-- Info contextual -->
+            <div class="info-box" id="infoBox">
+                <strong>💡 Half Kelly:</strong> Obtiene ~75% del crecimiento óptimo con ~50% menos volatilidad. Es el estándar entre traders profesionales.
+            </div>
+
+            <!-- Opciones Kelly -->
+            <div>
+                <div class="section-title">Comparativa de riesgo por trade</div>
+                <div class="kelly-options">
+                    <div class="kelly-option" data-fraction="0.25" onclick="selectOption(this)">
+                        <div class="kelly-option-name">Quarter Kelly</div>
+                        <div class="kelly-option-value" id="quarterKelly">6.25%</div>
+                        <div class="kelly-option-desc"><span id="quarterAmount">$625</span>/trade</div>
+                        <div class="kelly-option-risk risk-low">Conservador</div>
+                    </div>
+                    <div class="kelly-option selected" data-fraction="0.5" onclick="selectOption(this)">
+                        <div class="kelly-option-name">Half Kelly ⭐</div>
+                        <div class="kelly-option-value" id="halfKelly">12.50%</div>
+                        <div class="kelly-option-desc"><span id="halfAmount">$1,250</span>/trade</div>
+                        <div class="kelly-option-risk risk-medium">Recomendado</div>
+                    </div>
+                    <div class="kelly-option" data-fraction="1" onclick="selectOption(this)">
+                        <div class="kelly-option-name">Full Kelly</div>
+                        <div class="kelly-option-value" id="fullKelly">25.00%</div>
+                        <div class="kelly-option-desc"><span id="fullAmount">$2,500</span>/trade</div>
+                        <div class="kelly-option-risk risk-high">Agresivo</div>
+                    </div>
                 </div>
-                <div class="sim-input-group">
-                    <label>Capital Inicial ($)</label>
-                    <input type="number" id="simBankroll" value="10000" min="1000" step="1000">
+            </div>
+
+            <!-- Simulación -->
+            <div class="sim-section">
+                <div class="sim-header">
+                    <div>
+                        <div class="sim-title">Simulación Monte Carlo (100 escenarios)</div>
+                        <div class="sim-subtitle">Rango de resultados posibles con Half Kelly</div>
+                    </div>
+                    <div class="sim-legend">
+                        <div class="legend-item">
+                            <div class="legend-line" style="background: var(--green)"></div>
+                            <span>Mejor 10%</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line" style="background: var(--accent)"></div>
+                            <span>Mediana</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line" style="background: var(--red)"></div>
+                            <span>Peor 10%</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line dashed"></div>
+                            <span>Capital inicial</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="chart"></canvas>
+                </div>
+
+                <div class="results-grid">
+                    <div class="result-card">
+                        <div class="result-label">Mejor escenario (10%)</div>
+                        <div class="result-value positive" id="bestCase">$15,200</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Resultado mediano</div>
+                        <div class="result-value" id="medianCase">$12,100</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Peor escenario (10%)</div>
+                        <div class="result-value negative" id="worstCase">$7,800</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Max Drawdown típico</div>
+                        <div class="result-value negative" id="maxDrawdown">-18%</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="chart-container">
-                <canvas id="growthChart"></canvas>
+            <!-- Disclaimer -->
+            <div class="disclaimer">
+                ⚠️ Esta simulación muestra un <strong>rango de posibilidades</strong>, no una predicción. 
+                Los resultados reales dependen de la precisión de tu win rate y R:R históricos. 
+                El Kelly asume que conoces tus probabilidades exactas — en la realidad son estimaciones.
             </div>
-
-            <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 15px; color: #2d3748;">Resultados de Simulación</h3>
-            <table class="simulation-table">
-                <thead>
-                    <tr>
-                        <th>Kelly Fraction</th>
-                        <th>Capital Final</th>
-                        <th>Retorno Total</th>
-                        <th>Crecimiento Anualizado</th>
-                    </tr>
-                </thead>
-                <tbody id="simulationResults">
-                    <tr>
-                        <td class="kelly-fraction-cell">0.25x Kelly (6.25%)</td>
-                        <td>$25,173.99</td>
-                        <td class="positive-return">+151.74%</td>
-                        <td class="positive-return">+0.93%</td>
-                    </tr>
-                    <tr>
-                        <td class="kelly-fraction-cell">0.5x Kelly (12.50%)</td>
-                        <td>$379,297.53</td>
-                        <td class="positive-return">+3692.98%</td>
-                        <td class="positive-return">+3.70%</td>
-                    </tr>
-                    <tr>
-                        <td class="kelly-fraction-cell">0.75x Kelly (18.75%)</td>
-                        <td>$27,775.59</td>
-                        <td class="positive-return">+177.76%</td>
-                        <td class="positive-return">+1.03%</td>
-                    </tr>
-                    <tr>
-                        <td class="kelly-fraction-cell">1x Kelly (25.00%)</td>
-                        <td>$135,427.84</td>
-                        <td class="positive-return">+1254.28%</td>
-                        <td class="positive-return">+2.64%</td>
-                    </tr>
-                    <tr>
-                        <td class="kelly-fraction-cell">1.5x Kelly (37.50%)</td>
-                        <td>$124,436.45</td>
-                        <td class="positive-return">+1144.36%</td>
-                        <td class="positive-return">+2.55%</td>
-                    </tr>
-                    <tr>
-                        <td class="kelly-fraction-cell">2x Kelly (50.00%)</td>
-                        <td>$10,219.19</td>
-                        <td class="positive-return">+2.19%</td>
-                        <td class="positive-return">+0.02%</td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
-
-        <footer>
-            <p>📈 Calculadora Kelly Criterion • Creada para traders por <a href="#" target="_blank">Ivan</a></p>
-            <p style="margin-top: 10px; font-size: 0.85rem;">Basado en el paper de John L. Kelly Jr. (1956)</p>
-        </footer>
     </div>
 
     <script>
-        // Chart instance global
-        let growthChart = null;
+        let chart = null;
+        let selectedFraction = 0.5;
 
-        // Referencias a elementos
-        const winRateInput = document.getElementById('winRate');
-        const winRateValue = document.getElementById('winRateValue');
-        const riskRewardInput = document.getElementById('riskReward');
-        const rrValue = document.getElementById('rrValue');
-        const bankrollInput = document.getElementById('bankroll');
-
-        // Elementos de resultados
-        const fullKellyPercent = document.getElementById('fullKellyPercent');
-        const fullKellyAmount = document.getElementById('fullKellyAmount');
-        const halfKellyPercent = document.getElementById('halfKellyPercent');
-        const halfKellyAmount = document.getElementById('halfKellyAmount');
-        const quarterKellyPercent = document.getElementById('quarterKellyPercent');
-        const quarterKellyAmount = document.getElementById('quarterKellyAmount');
-        const edgeValue = document.getElementById('edgeValue');
-        const expectedGain = document.getElementById('expectedGain');
-        const drawdown = document.getElementById('drawdown');
-        const ruinRisk = document.getElementById('ruinRisk');
-        const alertContainer = document.getElementById('alertContainer');
-
-        // Event listeners
-        winRateInput.addEventListener('input', updateCalculations);
-        riskRewardInput.addEventListener('input', updateCalculations);
-        bankrollInput.addEventListener('input', updateCalculations);
-
-        // SIMULATION FUNCTIONS
-        function runSimulation() {
-            const numTrades = parseInt(document.getElementById('numTrades').value);
-            const simBankroll = parseFloat(document.getElementById('simBankroll').value);
-            const winRate = parseFloat(winRateInput.value) / 100;
-            const rr = parseFloat(riskRewardInput.value);
-
-            // Calculate Kelly
-            const p = winRate;
-            const q = 1 - p;
-            const b = rr;
-            const kellyFraction = (b * p - q) / b;
-
-            if (kellyFraction <= 0) {
-                alert('⚠️ Edge negativo. No se puede simular un sistema perdedor.');
-                return;
-            }
-
-            // Kelly fractions to simulate
-            const fractions = [0.25, 0.5, 0.75, 1, 1.5, 2];
-            const results = {};
-            const chartData = {};
-
-            // Run simulation for each fraction
-            fractions.forEach(fraction => {
-                const kellySize = kellyFraction * fraction;
-                const simulation = simulateTrades(simBankroll, numTrades, winRate, rr, kellySize);
-                results[fraction] = simulation.final;
-                chartData[fraction] = simulation.history;
-            });
-
-            // Update chart
-            updateChart(chartData, numTrades);
-
-            // Update table
-            updateSimulationTable(results, simBankroll, kellyFraction, fractions, numTrades);
+        function selectOption(el) {
+            document.querySelectorAll('.kelly-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedFraction = parseFloat(el.dataset.fraction);
+            calculate();
         }
 
-        function simulateTrades(initialCapital, numTrades, winRate, rr, kellySize) {
-            let capital = initialCapital;
-            const history = [capital];
+        function calculate() {
+            const winRate = parseFloat(document.getElementById('winRate').value) / 100;
+            const rr = parseFloat(document.getElementById('riskReward').value);
+            const capital = parseFloat(document.getElementById('capital').value);
+            const numTrades = parseInt(document.getElementById('numTrades').value);
 
-            for (let i = 0; i < numTrades; i++) {
-                const betSize = capital * kellySize;
-                const win = Math.random() < winRate;
+            // Kelly Formula
+            const kelly = winRate - ((1 - winRate) / rr);
+            const edge = (winRate * rr - (1 - winRate)) * 100;
 
-                if (win) {
-                    capital += betSize * rr;
-                } else {
-                    capital -= betSize;
-                }
+            // Fracciones
+            const quarterK = Math.max(0, kelly * 0.25);
+            const halfK = Math.max(0, kelly * 0.5);
+            const fullK = Math.max(0, kelly);
 
-                // Prevent bankruptcy
-                if (capital < 0) capital = 0;
-                
-                history.push(capital);
+            // Update main result (Half Kelly)
+            const kellyEl = document.getElementById('kellyValue');
+            if (kelly <= 0) {
+                kellyEl.textContent = 'NO OPERAR';
+                kellyEl.className = 'main-result-value danger';
+                document.getElementById('kellyAmount').textContent = '$0';
+            } else {
+                kellyEl.textContent = (halfK * 100).toFixed(2) + '%';
+                kellyEl.className = 'main-result-value';
+                document.getElementById('kellyAmount').textContent = formatMoney(capital * halfK);
             }
 
+            // Update options
+            document.getElementById('quarterKelly').textContent = (quarterK * 100).toFixed(2) + '%';
+            document.getElementById('halfKelly').textContent = (halfK * 100).toFixed(2) + '%';
+            document.getElementById('fullKelly').textContent = (fullK * 100).toFixed(2) + '%';
+
+            document.getElementById('quarterAmount').textContent = formatMoney(capital * quarterK);
+            document.getElementById('halfAmount').textContent = formatMoney(capital * halfK);
+            document.getElementById('fullAmount').textContent = formatMoney(capital * fullK);
+
+            // Update info box
+            updateInfoBox(kelly, edge);
+
+            // Run Monte Carlo simulation
+            if (kelly > 0) {
+                const betSize = kelly * selectedFraction;
+                const simResults = monteCarloSimulation(capital, numTrades, winRate, rr, betSize, 100);
+                updateChart(simResults, numTrades, capital);
+                updateResults(simResults, capital);
+            } else {
+                if (chart) chart.destroy();
+                document.getElementById('bestCase').textContent = '-';
+                document.getElementById('medianCase').textContent = '-';
+                document.getElementById('worstCase').textContent = '-';
+                document.getElementById('maxDrawdown').textContent = '-';
+            }
+        }
+
+        function updateInfoBox(kelly, edge) {
+            const box = document.getElementById('infoBox');
+            
+            if (kelly <= 0) {
+                box.className = 'info-box danger';
+                box.innerHTML = `<strong>⛔ Edge negativo (${edge.toFixed(1)}%):</strong> Tu sistema pierde dinero a largo plazo. No arriesgues capital hasta mejorar tu win rate o R:R.`;
+            } else if (kelly > 0.40) {
+                box.className = 'info-box danger';
+                box.innerHTML = `<strong>⚠️ Verifica tus datos:</strong> Un Kelly de ${(kelly*100).toFixed(0)}% es inusualmente alto. Asegúrate de que tu win rate y R:R sean precisos.`;
+            } else {
+                box.className = 'info-box';
+                box.innerHTML = `<strong>💡 Half Kelly:</strong> Obtiene ~75% del crecimiento óptimo con ~50% menos volatilidad. Es el estándar entre traders profesionales.`;
+            }
+        }
+
+        function monteCarloSimulation(capital, trades, winRate, rr, betSize, numSimulations) {
+            const allSimulations = [];
+            const finalValues = [];
+            const maxDrawdowns = [];
+
+            for (let sim = 0; sim < numSimulations; sim++) {
+                let c = capital;
+                let peak = capital;
+                let maxDD = 0;
+                const history = [c];
+
+                for (let i = 0; i < trades; i++) {
+                    const bet = c * Math.min(betSize, 0.5); // Cap at 50% per trade for safety
+                    if (Math.random() < winRate) {
+                        c += bet * rr;
+                    } else {
+                        c -= bet;
+                    }
+                    c = Math.max(0, c);
+                    history.push(c);
+
+                    // Track peak and drawdown
+                    if (c > peak) peak = c;
+                    const dd = (peak - c) / peak;
+                    if (dd > maxDD) maxDD = dd;
+
+                    if (c <= 0) break;
+                }
+
+                allSimulations.push(history);
+                finalValues.push(c);
+                maxDrawdowns.push(maxDD);
+            }
+
+            // Sort by final value
+            const sorted = [...finalValues].sort((a, b) => a - b);
+            const p10Index = Math.floor(numSimulations * 0.1);
+            const p50Index = Math.floor(numSimulations * 0.5);
+            const p90Index = Math.floor(numSimulations * 0.9);
+
+            // Get representative paths
+            const worstPath = allSimulations[finalValues.indexOf(sorted[p10Index])];
+            const medianPath = allSimulations[finalValues.indexOf(sorted[p50Index])];
+            const bestPath = allSimulations[finalValues.indexOf(sorted[p90Index])];
+
+            // Calculate median drawdown
+            const sortedDD = [...maxDrawdowns].sort((a, b) => a - b);
+            const medianDD = sortedDD[p50Index];
+
             return {
-                final: capital,
-                history: history
+                worst: worstPath,
+                median: medianPath,
+                best: bestPath,
+                worstFinal: sorted[p10Index],
+                medianFinal: sorted[p50Index],
+                bestFinal: sorted[p90Index],
+                medianDrawdown: medianDD
             };
         }
 
-        function updateChart(chartData, numTrades) {
-            const ctx = document.getElementById('growthChart').getContext('2d');
-            
-            // Destroy existing chart
-            if (growthChart) {
-                growthChart.destroy();
-            }
+        function updateChart(results, trades, capital) {
+            const ctx = document.getElementById('chart').getContext('2d');
+            if (chart) chart.destroy();
 
-            const datasets = [
-                {
-                    label: '0.25x Kelly',
-                    data: chartData[0.25],
-                    borderColor: '#48bb78',
-                    backgroundColor: 'rgba(72, 187, 120, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    pointRadius: 0
-                },
-                {
-                    label: '0.5x Kelly',
-                    data: chartData[0.5],
-                    borderColor: '#4299e1',
-                    backgroundColor: 'rgba(66, 153, 225, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    pointRadius: 0
-                },
-                {
-                    label: '0.75x Kelly',
-                    data: chartData[0.75],
-                    borderColor: '#ed8936',
-                    backgroundColor: 'rgba(237, 137, 54, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    pointRadius: 0
-                },
-                {
-                    label: '1x Kelly',
-                    data: chartData[1],
-                    borderColor: '#9f7aea',
-                    backgroundColor: 'rgba(159, 122, 234, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    pointRadius: 0
-                },
-                {
-                    label: '1.5x Kelly',
-                    data: chartData[1.5],
-                    borderColor: '#f56565',
-                    backgroundColor: 'rgba(245, 101, 101, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    pointRadius: 0
-                },
-                {
-                    label: '2x Kelly',
-                    data: chartData[2],
-                    borderColor: '#a0616a',
-                    backgroundColor: 'rgba(160, 97, 106, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    pointRadius: 0
-                }
-            ];
+            const labels = Array.from({length: trades + 1}, (_, i) => i);
 
-            growthChart = new Chart(ctx, {
+            chart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: Array.from({length: numTrades + 1}, (_, i) => i),
-                    datasets: datasets
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Mejor 10%',
+                            data: results.best,
+                            borderColor: '#059669',
+                            backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 0,
+                            fill: '+1'
+                        },
+                        {
+                            label: 'Mediana',
+                            data: results.median,
+                            borderColor: '#D97706',
+                            backgroundColor: 'transparent',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Peor 10%',
+                            data: results.worst,
+                            borderColor: '#DC2626',
+                            backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 0,
+                            fill: '-1'
+                        },
+                        {
+                            label: 'Capital inicial',
+                            data: Array(trades + 1).fill(capital),
+                            borderColor: '#999',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        title: {
-                            display: true,
-                            text: 'Crecimiento de Capital con Diferentes Fracciones Kelly',
-                            font: {
-                                size: 16,
-                                weight: 'bold'
-                            }
-                        },
-                        legend: {
-                            display: true,
-                            position: 'top',
-                        },
+                        legend: { display: false },
                         tooltip: {
+                            backgroundColor: '#1A1A1A',
+                            titleColor: '#FFF',
+                            bodyColor: '#FFF',
+                            padding: 12,
+                            cornerRadius: 8,
                             callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
+                                title: ctx => 'Trade #' + ctx[0].label,
+                                label: ctx => {
+                                    if (ctx.dataset.label === 'Capital inicial') return null;
+                                    return ctx.dataset.label + ': ' + formatMoney(ctx.parsed.y);
                                 }
                             }
                         }
                     },
                     scales: {
                         y: {
-                            beginAtZero: true,
+                            grid: { color: '#E5E5E3' },
                             ticks: {
-                                callback: function(value) {
-                                    return '$' + value.toLocaleString();
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Capital ($)'
+                                color: '#999',
+                                font: { size: 11 },
+                                callback: v => formatMoney(v)
                             }
                         },
                         x: {
+                            grid: { display: false },
+                            ticks: { 
+                                color: '#999', 
+                                font: { size: 11 }, 
+                                maxTicksLimit: 8
+                            },
                             title: {
                                 display: true,
-                                text: 'Número de Trades'
+                                text: 'Número de trades',
+                                color: '#999',
+                                font: { size: 10 }
                             }
                         }
                     }
@@ -900,179 +721,26 @@
             });
         }
 
-        function updateSimulationTable(results, initialCapital, kellyFraction, fractions, numTrades) {
-            const tbody = document.getElementById('simulationResults');
-            tbody.innerHTML = '';
+        function updateResults(results, capital) {
+            document.getElementById('bestCase').textContent = formatMoney(results.bestFinal);
+            document.getElementById('bestCase').className = 'result-value ' + (results.bestFinal >= capital ? 'positive' : 'negative');
 
-            fractions.forEach(fraction => {
-                const finalCapital = results[fraction];
-                const totalReturn = ((finalCapital - initialCapital) / initialCapital) * 100;
-                
-                // Calculate annualized growth rate
-                // Assuming ~250 trading days per year, adjust based on numTrades
-                const years = numTrades / 250;
-                const annualizedGrowth = years > 0 ? 
-                    (Math.pow(finalCapital / initialCapital, 1 / years) - 1) * 100 : 0;
+            document.getElementById('medianCase').textContent = formatMoney(results.medianFinal);
+            document.getElementById('medianCase').className = 'result-value ' + (results.medianFinal >= capital ? 'positive' : 'negative');
 
-                const kellyPercent = (kellyFraction * fraction * 100).toFixed(2);
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="kelly-fraction-cell">${fraction}x Kelly (${kellyPercent}%)</td>
-                    <td>${formatCurrency(finalCapital)}</td>
-                    <td class="${totalReturn >= 0 ? 'positive-return' : 'negative-return'}">
-                        ${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(2)}%
-                    </td>
-                    <td class="${annualizedGrowth >= 0 ? 'positive-return' : 'negative-return'}">
-                        ${annualizedGrowth >= 0 ? '+' : ''}${annualizedGrowth.toFixed(2)}%
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
+            document.getElementById('worstCase').textContent = formatMoney(results.worstFinal);
+            document.getElementById('worstCase').className = 'result-value ' + (results.worstFinal >= capital ? 'positive' : 'negative');
+
+            document.getElementById('maxDrawdown').textContent = '-' + (results.medianDrawdown * 100).toFixed(0) + '%';
         }
 
-        function updateCalculations() {
-            // Obtener valores
-            const winRate = parseFloat(winRateInput.value) / 100;
-            const rr = parseFloat(riskRewardInput.value);
-            const bankroll = parseFloat(bankrollInput.value);
-
-            // Actualizar displays de inputs
-            winRateValue.textContent = `${winRateInput.value}%`;
-            rrValue.textContent = rr.toFixed(1);
-
-            // Calcular Kelly
-            const p = winRate;
-            const q = 1 - p;
-            const b = rr; // En trading, b es el R:R ratio
-            
-            // Fórmula Kelly: (bp - q) / b
-            const kellyFraction = (b * p - q) / b;
-            
-            // Edge calculation
-            const edge = (p * b - q) * 100;
-
-            // Generar alertas
-            generateAlerts(kellyFraction, edge, p);
-
-            // Si Kelly es negativo, mostrar advertencia
-            if (kellyFraction < 0) {
-                fullKellyPercent.textContent = '0%';
-                fullKellyAmount.textContent = '$0';
-                halfKellyPercent.textContent = '0%';
-                halfKellyAmount.textContent = '$0';
-                quarterKellyPercent.textContent = '0%';
-                quarterKellyAmount.textContent = '$0';
-                edgeValue.textContent = edge.toFixed(2) + '%';
-                expectedGain.textContent = '$0';
-                drawdown.textContent = 'N/A';
-                ruinRisk.textContent = 'N/A';
-                return;
-            }
-
-            // Calcular cantidades
-            const fullKelly = kellyFraction;
-            const halfKelly = kellyFraction * 0.5;
-            const quarterKelly = kellyFraction * 0.25;
-
-            const fullKellyDollars = bankroll * fullKelly;
-            const halfKellyDollars = bankroll * halfKelly;
-            const quarterKellyDollars = bankroll * quarterKelly;
-
-            // Actualizar UI
-            fullKellyPercent.textContent = (fullKelly * 100).toFixed(2) + '%';
-            fullKellyAmount.textContent = formatCurrency(fullKellyDollars);
-            
-            halfKellyPercent.textContent = (halfKelly * 100).toFixed(2) + '%';
-            halfKellyAmount.textContent = formatCurrency(halfKellyDollars);
-            
-            quarterKellyPercent.textContent = (quarterKelly * 100).toFixed(2) + '%';
-            quarterKellyAmount.textContent = formatCurrency(quarterKellyDollars);
-
-            // Estadísticas
-            edgeValue.textContent = edge.toFixed(2) + '%';
-            
-            // Expected gain por trade usando Half Kelly
-            const expectedGainValue = halfKellyDollars * ((p * b) + (q * -1));
-            expectedGain.textContent = formatCurrency(expectedGainValue);
-
-            // Drawdown y riesgo (valores históricos para Half Kelly)
-            drawdown.textContent = '-11.8%';
-            ruinRisk.textContent = '11%';
+        function formatMoney(v) {
+            if (v >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
+            if (v >= 10000) return '$' + (v/1000).toFixed(1) + 'K';
+            return '$' + v.toLocaleString(undefined, {maximumFractionDigits: 0});
         }
 
-        function generateAlerts(kelly, edge, winRate) {
-            alertContainer.innerHTML = '';
-
-            if (edge < 0) {
-                alertContainer.innerHTML = `
-                    <div class="alert alert-danger">
-                        <span class="icon">⛔</span>
-                        <span><strong>NO APUESTES:</strong> Tu sistema tiene edge negativo. Perderás dinero a largo plazo.</span>
-                    </div>
-                `;
-                return;
-            }
-
-            if (kelly > 0.20) {
-                alertContainer.innerHTML = `
-                    <div class="alert alert-warning">
-                        <span class="icon">⚠️</span>
-                        <span><strong>Kelly muy alto (${(kelly*100).toFixed(1)}%):</strong> Verifica tus datos. Usa máximo Half Kelly (${(kelly*50).toFixed(1)}%).</span>
-                    </div>
-                `;
-                return;
-            }
-
-            if (kelly > 0.15) {
-                alertContainer.innerHTML = `
-                    <div class="alert alert-info">
-                        <span class="icon">ℹ️</span>
-                        <span><strong>Edge fuerte detectado:</strong> Usa Half o Quarter Kelly para reducir volatilidad.</span>
-                    </div>
-                `;
-                return;
-            }
-
-            if (edge > 0 && edge < 5) {
-                alertContainer.innerHTML = `
-                    <div class="alert alert-info">
-                        <span class="icon">ℹ️</span>
-                        <span><strong>Edge pequeño:</strong> Tu ventaja es válida pero modesta. Considera mejorar tu R:R o Win Rate.</span>
-                    </div>
-                `;
-                return;
-            }
-
-            alertContainer.innerHTML = `
-                <div class="alert alert-success">
-                    <span class="icon">✅</span>
-                    <span><strong>Sistema válido:</strong> Edge positivo de ${edge.toFixed(1)}%. Usa Half Kelly para balance óptimo.</span>
-                </div>
-            `;
-        }
-
-        function formatCurrency(value) {
-            return '$' + value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
-
-        function loadExample(wr, rr, br) {
-            winRateInput.value = wr;
-            riskRewardInput.value = rr;
-            bankrollInput.value = br;
-            document.getElementById('simBankroll').value = br;
-            updateCalculations();
-        }
-
-        // Inicializar
-        updateCalculations();
-
-        // Auto-run simulation on page load
-        window.addEventListener('load', function() {
-            setTimeout(() => {
-                runSimulation();
-            }, 500);
-        });
+        calculate();
     </script>
 </body>
 </html>
